@@ -20,6 +20,7 @@
     <script async custom-element="amp-youtube" src="https://cdn.ampproject.org/v0/amp-youtube-0.1.js"></script>
     <script async custom-element="amp-audio" src="https://cdn.ampproject.org/v0/amp-audio-0.1.js"></script>
     <script async custom-element="amp-iframe" src="https://cdn.ampproject.org/v0/amp-iframe-0.1.js"></script>
+    <script async custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-0.1.js"></script>
     <style amp-custom>
   :root{
     --bg-main: #684f67;
@@ -39,6 +40,36 @@
     }
   a{ 
     margin: 0 2px; 
+  }
+  amp-accordion {
+    background: var(--bg-menu);
+    width: 99%;
+    margin-bottom: 5px;
+  }
+  amp-accordion a{
+    background: var(--bg-menu);
+    color: var(--bg-main);
+    font-size: 12px;
+    text-decoration: none;
+    padding: 5px 10px;
+  }
+  amp-accordion .amp_a{
+    background: var(--bg-menu);
+    width: auto;
+  }
+  #sidebar{
+    background-color: rgba(0,0,0,0.9);
+    width: 250px;
+  }
+  #sidebar div{
+    text-align: center;
+  }
+  #sidebar button{
+    margin: 9px;
+  }
+  #sidebar a{
+    margin: 5px;
+    display: block;
   }
 </style>
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
@@ -77,8 +108,27 @@
     </script>
   </head>
 <body>
+  <amp-sidebar id="sidebar" layout="nodisplay" side="left">
+    <br>
+    <amp-accordion class="main" disable-session-states>
+      <section class="">
+        <h6 class="amp_a">.</h6>
+        <div>
+          <ul>
+            <li>
+              <a href="https://vi-mod.vercel.app/">vi-mod</a>
+              <a href="https://vii-mod.vercel.app/">vii-mod</a>
+              <a href="https://w-mod.vercel.app/">w-mod</a>
+            </li>
+          </ul>
+        </div>  
+      </section>
+    </amp-accordion>
+  </amp-sidebar>
    <amp-img id="mod-1" height="59" width="48" src="./img/mod-1.jpg" style="opacity:0.19"></amp-img>
    <!-- <amp-img id="mod-1" height="59" width="48" src="./img/star_tree.GIF" style="opacity:0.9"></amp-img> -->
    <a on="tap:mod-1.toggleVisibility">v-mod</a>
+   <a on="tap:sidebar">mod</a>
+   <!-- https://traxx020.ice.infomaniak.ch/traxx020-low.mp3 -->
  </body>
 </html>
