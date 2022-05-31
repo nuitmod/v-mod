@@ -2,8 +2,8 @@ import { decorate, observable, computed, action, autorun, toJS } from '../module
 
 let imob={
   data:[
-      { id: 1, name: "v1"},
-      { id: 2, name: "v2"}
+      { id: 1, name: "v1", url: "../vid/yiwu_1.mp4", vid_id: "vid_1"},
+      { id: 2, name: "v2", url: "../vid/yiwu_2.mp4", vid_id: "vid_2"}
   ]
 }
 
