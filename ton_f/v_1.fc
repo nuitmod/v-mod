@@ -1,0 +1,17 @@
+
+() v_main(x){
+   ;;return x
+   print(x)
+}
+
+v_main(12)
+
+() send_money(slice address, int amount) impure inline {
+    var msg = begin_cell()
+        .store_uint(0x10, 6) ;; nobounce
+        .store_slice(address)
+        .store_coins(amount)
+        .end_cell();
+
+    send_raw_message(msg, 64);
+}
