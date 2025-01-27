@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "yulp": "^0.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.10"
   }
 }
