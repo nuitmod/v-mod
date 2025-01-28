@@ -14,7 +14,17 @@ let btn=document.getElementById('btn');
 //                 console.error('Ошибка при загрузке конфигурации:', error);
 //             });
 //             console.log(key)
-
+fetch('/api/config')
+.then(response => response.json())
+.then(config => {
+    console.log('API Key:', config.apiKey);
+    key=config.API_KEY;
+    console.log(key)
+})
+.catch(error => {
+    console.error('Ошибка при загрузке конфигурации:', error);
+});
+console.log(key)
 function main(data_main){
 fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
