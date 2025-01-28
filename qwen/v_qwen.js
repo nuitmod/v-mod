@@ -154,9 +154,8 @@ async function loadApiKey() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         let config = await response.json();
-        console.log('API Key:', config.apiKey);
         key = config.apiKey;
-        console.log('Loaded API Key:', key);
+        //console.log('Loaded API Key:', key);
     } catch (error) {
         console.error('Ошибка при загрузке конфигурации:', error);
     }
