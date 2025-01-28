@@ -3,6 +3,6 @@
     "yulp": "^0.2.3"
   },
   "devDependencies": {
-    "@types/node": "^18.0.0"
+    "@types/node": "^22.10.10"
   }
 }
