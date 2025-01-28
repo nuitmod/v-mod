@@ -3,18 +3,18 @@ let data=document.getElementById('input')
 console.log(data.value)
 let btn=document.getElementById('btn');
 //btn.addEventListener('click',()=>console.log(data.value))
-fetch('../.env')
-            .then(response => response.json())
-            .then(config => {
-                console.log('API Key:', config.API_KEY);
-                key=config.API_KEY;
-                console.log(url)                
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке конфигурации:', error);
-            });
-            console.log(key)
-            
+// fetch('../.env')
+//             .then(response => response.json())
+//             .then(config => {
+//                 console.log('API Key:', config.API_KEY);
+//                 key=config.API_KEY;
+//                 console.log(url)                
+//             })
+//             .catch(error => {
+//                 console.error('Ошибка при загрузке конфигурации:', error);
+//             });
+//             console.log(key)
+
 function main(data_main){
 fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
