@@ -68,7 +68,7 @@ async function main(data_main) {
 
 
 async function blob(dat) {
-    let blob_res = await fetch("api/blob",{
+    let blob_res = await fetch("/api/blob",{
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: dat }),
