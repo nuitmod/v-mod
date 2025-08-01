@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Плавающие окна</title>
+  <style>
+    /* === Тёмная тема страницы === */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      padding: 40px;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      color: #bbdefb;
+    }
+
+    p {
+      color: #aaa;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .site-links a {
+      color: #64b5f6;
+      text-decoration: none;
+      font-size: 18px;
+      margin: 0 15px;
+    }
+
+    .site-links a:hover {
+      text-decoration: underline;
+      color: #90caf9;
+    }
+
+    /* === Плавающее окно === */
+    .floating-window {
+      position: fixed;
+      left: 100px;
+      top: 100px;
+      width: 320px;
+      height: 400px;
+      min-width: 240px;
+      min-height: 200px;
+      border-radius: 12px;
+      border: 2px solid #333;
+      background: #1e1e1e;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      user-select: none;
+      z-index: 1000;
+      touch-action: none;
+    }
+
+    .window-header {
+      background: #000000;
+      color: ghostwhite;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      cursor: move;
+      border-bottom: 1px solid #444;
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .window-header button {
+      background: none;
+      border: none;
+      color: ghostwhite;
+      font-size: 16px;
+      cursor: pointer;
+      opacity: 0.8;
+      width: 20px;
+      height: 20px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .window-header button:hover {
+      opacity: 1;
+    }
+
+    /* Кнопки: minimize слева от close */
+    .minimize-btn {
+      position: absolute;
+      right: 36px; /* Закрытие в 8px, минимизация на 36px справа — разница 28px */
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 8px;
+    }
+
+    .window-body {
+      width: 100%;
+      height: calc(100% - 40px);
+      border: none;
+    }
+
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 30px;
+      height: 30px;
+      background: #000000;
+      border: 2px solid #444;
+      border-radius: 0 0 12px 0;
+      cursor: se-resize;
+    }
+
+    /* Сворачивание: только шапка */
+    .minimized .window-body {
+      display: none;
+    }
+
+    .minimized .resize-handle {
+      display: none;
+    }
+
+    .minimized {
+      height: 40px !important; /* Только шапка */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Плавающие окна</h1>
+  <p>Каждый сайт — в своём окне. Сворачивание до высоты шапки.</p>
+
+  <div class="site-links">
+    <a href="#" id="link-vimod">vi-mod.vercel.app</a> |
+    <a href="#" id="link-vmod">v-mod.vercel.app</a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const link1 = document.getElementById('link-vimod');
+      const link2 = document.getElementById('link-vmod');
+      const windows = [];
+
+      function createFloatingWindow(url, title) {
+        const winId = 'win-' + Date.now();
+
+        const win = document.createElement('div');
+        win.className = 'floating-window';
+        win.dataset.id = winId;
+        win.innerHTML = `
+          <div class="window-header">
+            <span>${title}</span>
+            <button class="minimize-btn">−</button>
+            <button class="close-btn">×</button>
+          </div>
+          <iframe 
+            src="${url}" 
+            class="window-body" 
+            allow="autoplay; encrypted-media" 
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
+          </iframe>
+          <div class="resize-handle"></div>
+        `;
+
+        document.body.appendChild(win);
+
+        const header = win.querySelector('.window-header');
+        const minimizeBtn = win.querySelector('.minimize-btn');
+        const closeBtn = win.querySelector('.close-btn');
+        const resizeHandle = win.querySelector('.resize-handle');
+
+        let isDragging = false;
+        let isResizing = false;
+        let offsetX, offsetY;
+
+        // --- Перетаскивание ---
+        function startDrag(e) {
+          e.preventDefault();
+          const clientX = e.clientX || e.touches[0].clientX;
+          const clientY = e.clientY || e.touches[0].clientY;
+          isDragging = true;
+          offsetX = clientX - win.getBoundingClientRect().left;
+          offsetY = clientY - win.getBoundingClientRect().top;
+          win.style.cursor = 'grabbing';
+          win.style.zIndex = 1000 + windows.length + 1;
+        }
+
+        function moveDrag(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const clientX = e.clientX || e.touches[0].clientX;
+          const clientY = e.clientY || e.touches[0].clientY;
+          const x = clientX - offsetX;
+          const y = clientY - offsetY;
+          const maxX = window.innerWidth - win.offsetWidth;
+          const maxY = window.innerHeight - win.offsetHeight;
+          win.style.left = Math.max(0, Math.min(maxX, x)) + 'px';
+          win.style.top = Math.max(0, Math.min(maxY, y)) + 'px';
+        }
+
+        function stopDrag() {
+          isDragging = false;
+          win.style.cursor = 'default';
+        }
+
+        header.addEventListener('mousedown', startDrag);
+        header.addEventListener('touchstart', startDrag, { passive: false });
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('touchmove', moveDrag, { passive: false });
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
+
+        // --- Изменение размера ---
+        function startResize(e) {
+          e.preventDefault();
+          isResizing = true;
+        }
+
+        function moveResize(e) {
+          if (!isResizing) return;
+          e.preventDefault();
+          const clientX = e.clientX || e.touches[0].clientX;
+          const clientY = e.clientY || e.touches[0].clientY;
+          const width = clientX - win.getBoundingClientRect().left;
+          const height = clientY - win.getBoundingClientRect().top;
+          win.style.width = Math.max(240, width) + 'px';
+          win.style.height = Math.max(200, height) + 'px';
+        }
+
+        function stopResize() {
+          isResizing = false;
+        }
+
+        resizeHandle.addEventListener('mousedown', startResize);
+        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+        document.addEventListener('mousemove', moveResize);
+        document.addEventListener('touchmove', moveResize, { passive: false });
+        document.addEventListener('mouseup', stopResize);
+        document.addEventListener('touchend', stopResize);
+
+        // --- Сворачивание ---
+        minimizeBtn.addEventListener('click', () => {
+          if (win.classList.contains('minimized')) {
+            win.classList.remove('minimized');
+            minimizeBtn.textContent = '−';
+          } else {
+            win.classList.add('minimized');
+            minimizeBtn.textContent = '◻'; // Можно оставить '−' или использовать символ
+          }
+        });
+
+        // --- Закрытие ---
+        closeBtn.addEventListener('click', () => {
+          win.remove();
+          const index = windows.findIndex(w => w.element === win);
+          if (index !== -1) windows.splice(index, 1);
+        });
+
+        // Сохраняем окно
+        const windowObj = { element: win, url, title };
+        windows.push(windowObj);
+
+        win.addEventListener('remove', () => {
+          const index = windows.findIndex(w => w.element === win);
+          if (index !== -1) windows.splice(index, 1);
+        });
+
+        return win;
+      }
+
+      // Обработчики
+      link1.addEventListener('click', (e) => {
+        e.preventDefault();
+        createFloatingWindow('https://vi-mod.vercel.app', 'vi-mod.vercel.app');
+      });
+
+      link2.addEventListener('click', (e) => {
+        e.preventDefault();
+        createFloatingWindow('https://v-mod.vercel.app', 'v-mod.vercel.app');
+      });
+    });
+  </script>
+
+</body>
+</html>

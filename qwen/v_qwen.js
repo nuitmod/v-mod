@@ -36,7 +36,12 @@ async function main(data_main) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "model": "qwen/qwen-2-7b-instruct:free",
+               // "model": "qwen/qwen-2-7b-instruct:free",
+               // "model": "qwen/qwen2.5-vl-72b-instruct:free",
+                //"model": "qwen/qwen2.5-vl-3b-instruct:free",
+                //"model": "qwen/qwen3-32b:free",
+                "model": "qwen/qwen2.5-vl-32b-instruct:free",
+                //"qwen/qwen-vl-plus:free",
                 "messages": [
                     {
                         "role": "user",

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v-vv</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    #float-window {
+      position: fixed;
+      left: 100px;
+      top: 100px;
+      width: 260px;
+      height: 180px;
+      min-width: 200px;
+      min-height: 120px;
+      border: 2px solid #444;
+      border-radius: 10px;
+      background: #1e1e1e;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .window-header {
+      background: #000000; /* Чёрная шапка */
+      color: ghostwhite;  /* Красивый светлый белый оттенок */
+      padding: 8px 12px;
+      cursor: move;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .window-body {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      overflow: auto;
+      color: #ccc;
+    }
+
+    .resize-handle {
+      width: 16px;
+      height: 16px;
+      background: #000000; /* Чёрный уголок */
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      cursor: se-resize;
+      border-radius: 0 0 10px 0;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="float-window">
+    <div class="window-header">v-vv</div>
+    <div class="window-body">
+      Это простое плавающее окно.<br><br>
+      • Шапка — чёрная<br>
+      • Текст — <span style="color:ghostwhite">v-vv</span><br>
+      • Можно двигать и менять размер<br>
+      • Поддержка касаний
+    </div>
+    <div class="resize-handle" id="resize-handle"></div>
+  </div>
+
+  <script>
+    const win = document.getElementById('float-window');
+    const header = win.querySelector('.window-header');
+    const resizeHandle = document.getElementById('resize-handle');
+
+    // --- Перетаскивание ---
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    function startDrag(e) {
+      const clientX = e.clientX || e.touches[0].clientX;
+      const clientY = e.clientY || e.touches[0].clientY;
+      isDragging = true;
+      offsetX = clientX - win.getBoundingClientRect().left;
+      offsetY = clientY - win.getBoundingClientRect().top;
+    }
+
+    function moveDrag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      const clientX = e.clientX || e.touches[0].clientX;
+      const clientY = e.clientY || e.touches[0].clientY;
+      win.style.left = (clientX - offsetX) + 'px';
+      win.style.top = (clientY - offsetY) + 'px';
+    }
+
+    function stopDrag() {
+      isDragging = false;
+    }
+
+    header.addEventListener('mousedown', startDrag);
+    header.addEventListener('touchstart', startDrag, { passive: false });
+
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('touchmove', moveDrag, { passive: false });
+
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+
+    // --- Изменение размера ---
+    let isResizing = false;
+
+    function startResize(e) {
+      e.preventDefault();
+      isResizing = true;
+    }
+
+    function moveResize(e) {
+      if (!isResizing) return;
+      e.preventDefault();
+      const clientX = e.clientX || e.touches[0].clientX;
+      const clientY = e.clientY || e.touches[0].clientY;
+
+      const width = clientX - win.getBoundingClientRect().left;
+      const height = clientY - win.getBoundingClientRect().top;
+
+      win.style.width = Math.max(200, width) + 'px';
+      win.style.height = Math.max(120, height) + 'px';
+    }
+
+    function stopResize() {
+      isResizing = false;
+    }
+
+    resizeHandle.addEventListener('mousedown', startResize);
+    resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+
+    document.addEventListener('mousemove', moveResize);
+    document.addEventListener('touchmove', moveResize, { passive: false });
+
+    document.addEventListener('mouseup', stopResize);
+    document.addEventListener('touchend', stopResize);
+  </script>
+
+</body>
+</html>

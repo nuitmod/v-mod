@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Плавающие окна (как в Android)</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      transition: background 0.3s;
+    }
+
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 999;
+    }
+
+    button.control-btn {
+      padding: 12px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      background: #000000;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button.control-btn:hover {
+      background: #000000;
+    }
+
+    button.control-btn.theme-toggle {
+      background: #555;
+    }
+
+    button.control-btn.theme-toggle:hover {
+      background: #666;
+    }
+
+    body.dark button.control-btn.theme-toggle {
+      background: #bbb;
+      color: #333;
+    }
+
+    .floating-window {
+      position: fixed;
+      width: 280px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      background: white;
+      overflow: hidden;
+      z-index: 1000;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+
+    body.dark .floating-window {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .window-header {
+      background: #000000;
+      color: white;
+      padding: 10px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    body.dark .window-header {
+      background: #000000;
+    }
+
+    .window-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      line-height: 1;
+      opacity: 0.9;
+    }
+
+    .window-header button:hover {
+      opacity: 1;
+    }
+
+    .window-body {
+      padding: 15px;
+      font-size: 14px;
+      min-height: 60px;
+    }
+
+    body.dark .window-body {
+      color: #e0e0e0;
+    }
+
+    .minimized .window-body {
+      display: none;
+    }
+
+    .minimized {
+      height: 45px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Кнопки управления -->
+  <div class="controls">
+    <button id="add-window" class="control-btn">+</button>
+    <button id="theme-toggle" class="control-btn theme-toggle">◐</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const addBtn = document.getElementById('add-window');
+      const themeToggle = document.getElementById('theme-toggle');
+      let windowCounter = 1; // Счётчик для новых окон
+
+      // Проверка темы
+      if (localStorage.getItem('darkTheme') === 'true') {
+        document.body.classList.add('dark');
+        themeToggle.textContent = '◑';
+      }
+
+      // Переключение темы
+      themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        if (document.body.classList.contains('dark')) {
+          localStorage.setItem('darkTheme', 'true');
+          themeToggle.textContent = '◑';
+        } else {
+          localStorage.setItem('darkTheme', 'false');
+          themeToggle.textContent = '◐';
+        }
+      });
+
+      // Создание нового окна
+      addBtn.addEventListener('click', () => {
+        const id = 'win' + Date.now(); // Уникальный ID
+        createFloatingWindow(id, `Окно ${++windowCounter}`);
+      });
+
+      // Функция создания окна
+      function createFloatingWindow(id, title) {
+        const win = document.createElement('div');
+        win.className = 'floating-window';
+        win.dataset.id = id;
+
+        win.innerHTML = `
+          <div class="window-header">
+            <span>${title}</span>
+            <div>
+              <button class="minimize-btn">−</button>
+              <button class="close-btn">×</button>
+            </div>
+          </div>
+          <div class="window-body">
+            Это новое плавающее окно.<br>Его положение будет сохранено.
+          </div>
+        `;
+
+        document.body.appendChild(win);
+
+        initWindowBehavior(win);
+      }
+
+      // Инициализация поведения окна (перетаскивание, минимизация и т.д.)
+      function initWindowBehavior(win) {
+        const header = win.querySelector('.window-header');
+        const closeBtn = win.querySelector('.close-btn');
+        const minimizeBtn = win.querySelector('.minimize-btn');
+        const winId = win.dataset.id;
+
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        // Восстановление позиции
+        const savedPos = JSON.parse(localStorage.getItem(`floatWin_${winId}`));
+        if (savedPos) {
+          win.style.left = savedPos.left + 'px';
+          win.style.top = savedPos.top + 'px';
+          if (savedPos.minimized) {
+            win.classList.add('minimized');
+            minimizeBtn.textContent = '+';
+          }
+        } else {
+          // Стартовая позиция с небольшим смещением
+          const x = 100 + Math.random() * 100;
+          const y = 100 + Math.random() * 100;
+          win.style.left = x + 'px';
+          win.style.top = y + 'px';
+        }
+
+        // Сохранение позиции и состояния
+        const saveState = () => {
+          const pos = {
+            left: parseInt(win.style.left) || 100,
+            top: parseInt(win.style.top) || 100,
+            minimized: win.classList.contains('minimized')
+          };
+          localStorage.setItem(`floatWin_${winId}`, JSON.stringify(pos));
+        };
+
+        // --- Перетаскивание (мышь + touch) ---
+        function startDrag(e) {
+          e.preventDefault();
+          isDragging = true;
+          const clientX = e.clientX || e.touches[0].clientX;
+          const clientY = e.clientY || e.touches[0].clientY;
+
+          offsetX = clientX - win.getBoundingClientRect().left;
+          offsetY = clientY - win.getBoundingClientRect().top;
+
+          win.style.cursor = 'grabbing';
+          win.style.zIndex = 1001; // Поверх других
+        }
+
+        function moveDrag(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const clientX = e.clientX || e.touches[0].clientX;
+          const clientY = e.clientY || e.touches[0].clientY;
+
+          const x = clientX - offsetX;
+          const y = clientY - offsetY;
+
+          const maxX = document.documentElement.clientWidth - win.offsetWidth;
+          const maxY = document.documentElement.clientHeight - win.offsetHeight;
+
+          win.style.left = Math.max(0, Math.min(maxX, x)) + 'px';
+          win.style.top = Math.max(0, Math.min(maxY, y)) + 'px';
+        }
+
+        function stopDrag() {
+          if (isDragging) {
+            saveState();
+            isDragging = false;
+            win.style.cursor = 'default';
+          }
+        }
+
+        // События мыши
+        header.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('mouseup', stopDrag);
+
+        // Touch события
+        header.addEventListener('touchstart', startDrag, { passive: false });
+        document.addEventListener('touchmove', moveDrag, { passive: false });
+        document.addEventListener('touchend', stopDrag);
+
+        // Минимизация
+        minimizeBtn.addEventListener('click', () => {
+          if (win.classList.contains('minimized')) {
+            win.classList.remove('minimized');
+            minimizeBtn.textContent = '−';
+          } else {
+            win.classList.add('minimized');
+            minimizeBtn.textContent = '+';
+          }
+          saveState();
+        });
+
+        // Закрытие
+        closeBtn.addEventListener('click', () => {
+          win.remove();
+          localStorage.removeItem(`floatWin_${winId}`); // Удаляем данные
+        });
+      }
+
+      // Загрузка сохранённых окон при старте
+      const savedWindows = localStorage.getItem('createdWindows');
+      if (savedWindows) {
+        JSON.parse(savedWindows).forEach(id => {
+          createFloatingWindow(id, `Окно ${windowCounter++}`);
+        });
+      }
+
+      // Сохранение списка созданных окон
+      function saveWindowList() {
+        const ids = Array.from(document.querySelectorAll('.floating-window'))
+                         .map(w => w.dataset.id);
+        localStorage.setItem('createdWindows', JSON.stringify(ids));
+      }
+
+      // При закрытии — сохраняем список (не обязательно, но можно)
+      window.addEventListener('beforeunload', saveWindowList);
+      // Лучше сохранять при создании/удалении
+      const originalCreate = createFloatingWindow;
+      window.createFloatingWindow = function(id, title) {
+        originalCreate(id, title);
+        saveWindowList();
+      };
+
+      // При удалении окна — обновляем список
+      const originalRemove = Element.prototype.remove;
+      Element.prototype.remove = function() {
+        if (this.classList.contains('floating-window')) {
+          const id = this.dataset.id;
+          localStorage.removeItem(`floatWin_${id}`);
+          setTimeout(saveWindowList, 10); // После удаления
+        }
+        originalRemove.call(this);
+      };
+
+      // Загружаем сохранённые окна
+      const savedIds = JSON.parse(localStorage.getItem('createdWindows')) || [];
+      savedIds.forEach(id => {
+        if (!document.querySelector(`[data-id="${id}"]`)) {
+          createFloatingWindow(id, `Окно ${++windowCounter}`);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

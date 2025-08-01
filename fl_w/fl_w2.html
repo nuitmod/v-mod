@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Плавающие окна (как в Android)</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+
+    .floating-window {
+      position: fixed;
+      width: 280px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      background: white;
+      overflow: hidden;
+      z-index: 1000;
+      user-select: none;
+    }
+
+    .window-header {
+      background: #000000;
+      color: white;
+      padding: 10px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .window-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      line-height: 1;
+      opacity: 0.9;
+    }
+
+    .window-header button:hover {
+      opacity: 1;
+    }
+
+    .window-body {
+      padding: 15px;
+      font-size: 14px;
+      min-height: 60px;
+    }
+
+    .minimized .window-body {
+      display: none;
+    }
+
+    .minimized {
+      height: 45px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Окно 1 -->
+  <div class="floating-window" data-id="win1">
+    <div class="window-header">
+      <span>Окно 1</span>
+      <div>
+        <button class="minimize-btn">−</button>
+        <button class="close-btn">×</button>
+      </div>
+    </div>
+    <div class="window-body">
+      Это первое плавающее окно.<br>Его положение сохранится.
+    </div>
+  </div>
+
+  <!-- Окно 2 -->
+  <div class="floating-window" data-id="win2">
+    <div class="window-header">
+      <span>Окно 2</span>
+      <div>
+        <button class="minimize-btn">−</button>
+        <button class="close-btn">×</button>
+      </div>
+    </div>
+    <div class="window-body">
+      Это второе окно. Можно перетаскивать, сворачивать и закрывать.
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const windows = document.querySelectorAll('.floating-window');
+
+      windows.forEach(win => {
+        const header = win.querySelector('.window-header');
+        const closeBtn = win.querySelector('.close-btn');
+        const minimizeBtn = win.querySelector('.minimize-btn');
+        const winId = win.dataset.id;
+
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        // --- Восстановление позиции из localStorage ---
+        const savedPos = JSON.parse(localStorage.getItem(`floatWin_${winId}`));
+        if (savedPos) {
+          win.style.left = savedPos.left + 'px';
+          win.style.top = savedPos.top + 'px';
+        } else {
+          // Небольшое смещение, чтобы окна не наложились
+          win.style.left = (100 + parseInt(winId.slice(-1)) * 40) + 'px';
+          win.style.top = (100 + parseInt(winId.slice(-1)) * 40) + 'px';
+        }
+
+        // --- Сохранение позиции при отпускании ---
+        const savePosition = () => {
+          const pos = {
+            left: parseInt(win.style.left) || 100,
+            top: parseInt(win.style.top) || 100
+          };
+          localStorage.setItem(`floatWin_${winId}`, JSON.stringify(pos));
+        };
+
+        // --- Перетаскивание ---
+        header.addEventListener('mousedown', function (e) {
+          isDragging = true;
+          offsetX = e.clientX - win.getBoundingClientRect().left;
+          offsetY = e.clientY - win.getBoundingClientRect().top;
+          win.style.cursor = 'grabbing';
+          win.style.zIndex = 1001; // Поднимаем поверх других
+        });
+
+        document.addEventListener('mousemove', function (e) {
+          if (!isDragging) return;
+          const x = e.clientX - offsetX;
+          const y = e.clientY - offsetY;
+
+          const maxX = document.documentElement.clientWidth - win.offsetWidth;
+          const maxY = document.documentElement.clientHeight - win.offsetHeight;
+
+          win.style.left = Math.max(0, Math.min(maxX, x)) + 'px';
+          win.style.top = Math.max(0, Math.min(maxY, y)) + 'px';
+        });
+
+        document.addEventListener('mouseup', function () {
+          if (isDragging) {
+            savePosition();
+            isDragging = false;
+            win.style.cursor = 'default';
+          }
+        });
+
+        // --- Минимизировать/развернуть ---
+        minimizeBtn.addEventListener('click', function () {
+          if (win.classList.contains('minimized')) {
+            win.classList.remove('minimized');
+            minimizeBtn.textContent = '−';
+          } else {
+            win.classList.add('minimized');
+            minimizeBtn.textContent = '+';
+          }
+          savePosition(); // Сохраняем состояние (высота изменилась)
+        });
+
+        // --- Закрыть ---
+        closeBtn.addEventListener('click', function () {
+          win.style.display = 'none';
+          // Можно удалить из localStorage при закрытии, или оставить
+          // localStorage.removeItem(`floatWin_${winId}`);
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
